@@ -1,5 +1,5 @@
 package org.example.request;
 
 public enum Method {
-    POST, GET, PATCH, DELETE, HEAD, PUT
+    POST, GET, DELETE, HEAD, PUT
 }

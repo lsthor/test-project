@@ -9,8 +9,6 @@ public interface Adapter {
 
     Response delete(String path);
 
-    Response patch(String path, String body);
-
     Response put(String path, String body);
 
     Response head(String path);
