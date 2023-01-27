@@ -42,14 +42,21 @@ public class RoundRobinRoutingServiceImpl implements RoutingService {
         executorService = Executors.newSingleThreadExecutor();
         executor = Executors.newSingleThreadScheduledExecutor();
         executor.scheduleAtFixedRate(() -> {
-            OptionalInt optionalInt = IntStream.range(0, arr.length)
-                    .filter(index -> problematicAdapterIndex.get(index).equals(Boolean.TRUE))
-                    .findFirst();
-            if (optionalInt.isPresent()) {
-                boolean healthy = adapters.get(optionalInt.getAsInt()).healthcheck();
-                if (healthy) {
-                    problematicAdapterIndex.set(optionalInt.getAsInt(), Boolean.FALSE);
+            try {
+                OptionalInt optionalInt = IntStream.range(0, arr.length)
+                        .filter(index -> problematicAdapterIndex.get(index).equals(Boolean.TRUE))
+                        .findFirst();
+                log.info("found instance failing {}", optionalInt);
+                if (optionalInt.isPresent()) {
+                    boolean healthy = adapters.get(optionalInt.getAsInt()).healthcheck();
+                    if (healthy) {
+                        log.info("instance {} recovered", optionalInt.getAsInt());
+                        problematicAdapterIndex.set(optionalInt.getAsInt(), Boolean.FALSE);
+                    }
                 }
+            } catch (Exception e) {
+                // catching all exceptions so thread wont die
+                log.error(e.getMessage(), e);
             }
         }, 0, Duration.ofSeconds(1).toSeconds(), TimeUnit.SECONDS);
 
