@@ -5,8 +5,20 @@ info:
   version: 1.0.0
 paths:
   /:
+    get:
+      summary: do nothing other than returning "ok", to act as healthcheck
+      operationId: getApi
+      responses:
+        200:
+          description: returning "ok"
+          content:
+            text/plain:
+              schema:
+                type: string
+                example: ok
     post:
       summary: a simple endpoint that returns json payload
+      operationId: postApi
       responses:
         200:
           description: a simple api to return response
