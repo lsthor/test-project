@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="org.example.ServiceTest" tests="8" skipped="0" failures="0" errors="0" timestamp="2023-01-24T06:49:10" hostname="DESKTOP-TCV23I3" time="0.685">
+  <properties/>
+  <testcase name="testServiceConnection()" classname="org.example.ServiceTest" time="0.544"/>
+  <testcase name="[1] 8010, 8010" classname="org.example.ServiceTest" time="0.041"/>
+  <testcase name="[2] 100, 8000" classname="org.example.ServiceTest" time="0.013"/>
+  <testcase name="[3] 10091, 10091" classname="org.example.ServiceTest" time="0.007"/>
+  <testcase name="[4] null, 8000" classname="org.example.ServiceTest" time="0.008"/>
+  <testcase name="[5] invalid-num, 8000" classname="org.example.ServiceTest" time="0.006"/>
+  <testcase name="[6] , 8000" classname="org.example.ServiceTest" time="0.006"/>
+  <testcase name="[7]  , 8000" classname="org.example.ServiceTest" time="0.008"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[[Test worker] INFO org.example.Service - Server started at port 8000
+[pool-1-thread-1] INFO org.example.Service - post /
+[pool-1-thread-1] INFO org.example.Service - incoming {"game":"Mobile Legends", "gamerID":"GYUTDTE", "points":20}
+[Test worker] INFO org.example.ServiceTest - calling port 8010
+[Test worker] INFO org.example.Service - Server started at port 8010
+[pool-2-thread-1] INFO org.example.Service - post /
+[pool-2-thread-1] INFO org.example.Service - incoming {"game":"Mobile Legends", "gamerID":"GYUTDTE", "points":20}
+[Test worker] INFO org.example.ServiceTest - calling port 8000
+[Test worker] INFO org.example.Service - Server started at port 8000
+[pool-3-thread-1] INFO org.example.Service - post /
+[pool-3-thread-1] INFO org.example.Service - incoming {"game":"Mobile Legends", "gamerID":"GYUTDTE", "points":20}
+[Test worker] INFO org.example.ServiceTest - calling port 10091
+[Test worker] INFO org.example.Service - Server started at port 10091
+[pool-4-thread-1] INFO org.example.Service - post /
+[pool-4-thread-1] INFO org.example.Service - incoming {"game":"Mobile Legends", "gamerID":"GYUTDTE", "points":20}
+[Test worker] INFO org.example.ServiceTest - calling port 8000
+[Test worker] INFO org.example.Service - Server started at port 8000
+[pool-5-thread-1] INFO org.example.Service - post /
+[pool-5-thread-1] INFO org.example.Service - incoming {"game":"Mobile Legends", "gamerID":"GYUTDTE", "points":20}
+[Test worker] INFO org.example.ServiceTest - calling port 8000
+[Test worker] INFO org.example.Service - Server started at port 8000
+[pool-6-thread-1] INFO org.example.Service - post /
+[pool-6-thread-1] INFO org.example.Service - incoming {"game":"Mobile Legends", "gamerID":"GYUTDTE", "points":20}
+[Test worker] INFO org.example.ServiceTest - calling port 8000
+[Test worker] INFO org.example.Service - Server started at port 8000
+[pool-7-thread-1] INFO org.example.Service - post /
+[pool-7-thread-1] INFO org.example.Service - incoming {"game":"Mobile Legends", "gamerID":"GYUTDTE", "points":20}
+[Test worker] INFO org.example.ServiceTest - calling port 8000
+[Test worker] INFO org.example.Service - Server started at port 8000
+[pool-8-thread-1] INFO org.example.Service - post /
+[pool-8-thread-1] INFO org.example.Service - incoming {"game":"Mobile Legends", "gamerID":"GYUTDTE", "points":20}
+]]></system-err>
+</testsuite>

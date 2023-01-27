@@ -1,0 +1,16 @@
+openapi: 3.0.3
+info:
+  title: Simple Service API
+  description: Simple Service API
+  version: 1.0.0
+paths:
+  /:
+    post:
+      summary: a simple endpoint that returns json payload
+      responses:
+        200:
+          description: a simple api to return response
+          content:
+            application/json:
+              schema:
+                type: object

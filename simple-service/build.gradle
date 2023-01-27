@@ -1,0 +1,35 @@
+plugins {
+    id 'java'
+    id 'application'
+}
+
+group 'org.example'
+version '1.0-SNAPSHOT'
+
+repositories {
+    mavenCentral()
+    jcenter()
+}
+
+dependencies {
+    compileOnly 'org.projectlombok:lombok:1.18.24'
+    annotationProcessor 'org.projectlombok:lombok:1.18.24'
+
+    implementation 'org.slf4j:slf4j-api:2.0.6'
+    implementation 'org.slf4j:slf4j-simple:2.0.6'
+    implementation group: 'io.vacco.java-express', name: 'java-express', version: '0.2.1'
+    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.8.1'
+    testImplementation 'org.junit.jupiter:junit-jupiter-params:5.8.1'
+    testImplementation 'uk.org.webcompere:system-stubs-jupiter:2.0.1'
+    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.8.1'
+    testCompileOnly 'org.projectlombok:lombok:1.18.24'
+    testAnnotationProcessor 'org.projectlombok:lombok:1.18.24'
+}
+
+test {
+    useJUnitPlatform()
+}
+
+application {
+    mainClassName = "org.example.App"
+}
