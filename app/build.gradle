@@ -25,6 +25,11 @@ dependencies {
     testImplementation "org.testcontainers:junit-jupiter:1.17.6"
     testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.8.1'
     testImplementation 'org.mockito:mockito-junit-jupiter:4.11.0'
+    testImplementation 'org.awaitility:awaitility:4.2.0'
+    testImplementation 'org.awaitility:awaitility-proxy:3.1.6'
+    testImplementation "org.testcontainers:testcontainers:1.17.6"
+    testImplementation "org.testcontainers:junit-jupiter:1.17.6"
+    testImplementation "org.testcontainers:toxiproxy:1.17.6"
 }
 
 test {

@@ -5,7 +5,6 @@ import org.example.respond.Response;
 
 import java.io.IOException;
 import java.net.URI;
-import java.net.URISyntaxException;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
@@ -13,15 +12,15 @@ import java.time.Duration;
 import java.util.Map;
 
 @Slf4j
-public class HttpAdapter implements Adapter{
+public class HttpAdapter implements Adapter {
     private final String name;
     private final String url;
     private final HttpClient httpClient;
+
     public HttpAdapter(String name, String url) {
         this.name = name;
         this.url = url;
-//        this.httpClient = HttpClient.newBuilder().connectTimeout(Duration.ofMillis(1000)).build();
-        this.httpClient = HttpClient.newBuilder().build();
+        this.httpClient = HttpClient.newBuilder().connectTimeout(Duration.ofMillis(1000)).build();
     }
 
     public HttpAdapter(String name, String url, HttpClient httpClient) {
@@ -35,12 +34,12 @@ public class HttpAdapter implements Adapter{
         Response response;
 
         try {
-            HttpRequest request = HttpRequest.newBuilder(new URI(url + path))
+            HttpRequest request = HttpRequest.newBuilder(URI.create(url + path))
                     .POST(HttpRequest.BodyPublishers.ofByteArray(body.getBytes()))
                     .build();
             HttpResponse<String> httpResponse = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
             response = new Response(httpResponse.statusCode(), httpResponse.body(), Map.of("x-server", name));
-        } catch (URISyntaxException | IOException | InterruptedException e) {
+        } catch (IOException | InterruptedException e) {
             log.error("Error calling POST method on {}", path, e);
             response = new Response(500, "Error calling url " + url, Map.of("x-server", name));
         }
@@ -51,15 +50,15 @@ public class HttpAdapter implements Adapter{
     @Override
     public Response get(String path) {
         Response response;
-
+        log.info("GET {}", url + path);
         try {
-            HttpRequest request = HttpRequest.newBuilder(new URI(url + path))
+            HttpRequest request = HttpRequest.newBuilder(URI.create(url + path))
                     .GET().build();
             HttpResponse<String> httpResponse = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
             response = new Response(httpResponse.statusCode(), httpResponse.body(), Map.of("x-server", name));
-        } catch (URISyntaxException | IOException | InterruptedException e) {
-            log.error("Error calling GET method on {}", path, e);
-            response = new Response(500, "Error calling url " + url, Map.of("x-server", name));
+        } catch (IOException | InterruptedException e) {
+            log.error("Error calling GET method on {}", url + path, e);
+            throw new RuntimeException(e);
         }
 
         return response;
@@ -70,14 +69,14 @@ public class HttpAdapter implements Adapter{
         Response response;
 
         try {
-            HttpRequest request = HttpRequest.newBuilder(new URI(url + path))
+            HttpRequest request = HttpRequest.newBuilder(URI.create(url + path))
                     .DELETE()
                     .build();
             HttpResponse<String> httpResponse = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
             response = new Response(httpResponse.statusCode(), httpResponse.body(), Map.of("x-server", name));
-        } catch (URISyntaxException | IOException | InterruptedException e) {
+        } catch (IOException | InterruptedException e) {
             log.error("Error calling DELETE method on {}", path, e);
-            response = new Response(500, "Error calling url " + url, Map.of("x-server", name));
+            throw new RuntimeException(e);
         }
 
         return response;
@@ -88,14 +87,14 @@ public class HttpAdapter implements Adapter{
         Response response;
 
         try {
-            HttpRequest request = HttpRequest.newBuilder(new URI(url + path))
+            HttpRequest request = HttpRequest.newBuilder(URI.create(url + path))
                     .PUT(HttpRequest.BodyPublishers.ofByteArray(body.getBytes()))
                     .build();
             HttpResponse<String> httpResponse = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
             response = new Response(httpResponse.statusCode(), httpResponse.body(), Map.of("x-server", name));
-        } catch (URISyntaxException | IOException | InterruptedException e) {
+        } catch (IOException | InterruptedException e) {
             log.error("Error calling PUT method on {}", path, e);
-            response = new Response(500, "Error calling url " + url, Map.of("x-server", name));
+            throw new RuntimeException(e);
         }
 
         return response;
@@ -106,16 +105,30 @@ public class HttpAdapter implements Adapter{
         Response response;
 
         try {
-            HttpRequest request = HttpRequest.newBuilder(new URI(url + path))
+            HttpRequest request = HttpRequest.newBuilder(URI.create(url + path))
                     .method("HEAD", HttpRequest.BodyPublishers.noBody())
                     .build();
             HttpResponse<String> httpResponse = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
             response = new Response(httpResponse.statusCode(), httpResponse.body(), Map.of("x-server", name));
-        } catch (URISyntaxException | IOException | InterruptedException e) {
+        } catch (IOException | InterruptedException e) {
             log.error("Error calling HEAD method on {}", path, e);
-            response = new Response(500, "Error calling url " + url, Map.of("x-server", name));
+            throw new RuntimeException(e);
         }
 
         return response;
+    }
+
+    @Override
+    public boolean healthcheck() {
+        Response response = get("/");
+        return response.status() >= 200 && response.status() < 300;
+    }
+
+    @Override
+    public String toString() {
+        return "HttpAdapter{" +
+                "name='" + name + '\'' +
+                ", url='" + url + '\'' +
+                '}';
     }
 }

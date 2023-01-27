@@ -11,7 +11,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
-import org.mockito.invocation.InvocationOnMock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.stubbing.Answer;
 
@@ -19,14 +18,37 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
+import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 import static org.example.service.RoundRobinRoutingServiceImpl.GATEWAY_TIMEOUT_RESPONSE;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.*;
-import static org.junit.jupiter.api.Assertions.*;
+
 @Slf4j
 @ExtendWith(MockitoExtension.class)
 public class RoutingServiceTest {
+    private static Stream<Arguments> provideRequestForward() {
+        return Stream.of(
+                Arguments.of(new RequestImpl(Method.GET, "/", ""),
+                        (Consumer<Adapter>) (Adapter adapter) -> when(adapter.get(anyString())).thenReturn(new Response(200, "ok", Map.of("x-server", "server-1"))),
+                        (Consumer<Adapter>) (Adapter adapter) -> verify(adapter, times(1)).get("/")),
+                Arguments.of(new RequestImpl(Method.POST, "/", "body"),
+                        (Consumer<Adapter>) (Adapter adapter) -> when(adapter.post(anyString(), anyString())).thenReturn(new Response(200, "ok", Map.of("x-server", "server-1"))),
+                        (Consumer<Adapter>) (Adapter adapter) -> verify(adapter, times(1)).post("/", "body")),
+                Arguments.of(new RequestImpl(Method.PUT, "/", "body"),
+                        (Consumer<Adapter>) (Adapter adapter) -> when(adapter.put(anyString(), anyString())).thenReturn(new Response(200, "ok", Map.of("x-server", "server-1"))),
+                        (Consumer<Adapter>) (Adapter adapter) -> verify(adapter, times(1)).put("/", "body")),
+                Arguments.of(new RequestImpl(Method.DELETE, "/", ""),
+                        (Consumer<Adapter>) (Adapter adapter) -> when(adapter.delete(anyString())).thenReturn(new Response(200, "ok", Map.of("x-server", "server-1"))),
+                        (Consumer<Adapter>) (Adapter adapter) -> verify(adapter, times(1)).delete("/")),
+                Arguments.of(new RequestImpl(Method.HEAD, "/", ""),
+                        (Consumer<Adapter>) (Adapter adapter) -> when(adapter.head(anyString())).thenReturn(new Response(200, "ok", Map.of("x-server", "server-1"))),
+                        (Consumer<Adapter>) (Adapter adapter) -> verify(adapter, times(1)).head("/"))
+        );
+    }
+
     @ParameterizedTest
     @MethodSource("provideRequestForward")
     void testRequestForwardedCorrectly(Request request, Consumer<Adapter> adapterConsumer, Consumer<Adapter> verifyMethodCall) {
@@ -107,12 +129,9 @@ public class RoutingServiceTest {
         Adapter adapter1 = mock(Adapter.class);
         RoutingService routingService = new RoundRobinRoutingServiceImpl(List.of(adapter1), 500);
         // making all adapter fail
-        when(adapter1.get(anyString())).thenAnswer(new Answer<Response>() {
-            @Override
-            public Response answer(InvocationOnMock invocation) throws Throwable {
-                Thread.sleep(700);
-                return new Response(200, "ok", Map.of("x-server", "server-1"));
-            }
+        when(adapter1.get(anyString())).thenAnswer((Answer<Response>) invocation -> {
+            Thread.sleep(700);
+            return new Response(200, "ok", Map.of("x-server", "server-1"));
         });
         var response = routingService.forwardRequest(new RequestImpl(Method.GET, "/", "req 1"));
         assertEquals(GATEWAY_TIMEOUT_RESPONSE, response);
@@ -123,23 +142,37 @@ public class RoutingServiceTest {
         assertThrows(IllegalArgumentException.class, () -> new RoundRobinRoutingServiceImpl(Collections.emptyList(), 1000));
     }
 
-    private static Stream<Arguments> provideRequestForward() {
-        return Stream.of(
-            Arguments.of(new RequestImpl(Method.GET, "/", ""),
-                    (Consumer<Adapter>)(Adapter adapter) -> when(adapter.get(anyString())).thenReturn(new Response(200, "ok", Map.of("x-server", "server-1"))),
-                    (Consumer<Adapter>)(Adapter adapter) -> verify(adapter, times(1)).get("/")),
-            Arguments.of(new RequestImpl(Method.POST, "/", "body"),
-                    (Consumer<Adapter>)(Adapter adapter) -> when(adapter.post(anyString(), anyString())).thenReturn(new Response(200, "ok", Map.of("x-server", "server-1"))),
-                    (Consumer<Adapter>)(Adapter adapter) -> verify(adapter, times(1)).post("/", "body")),
-            Arguments.of(new RequestImpl(Method.PUT, "/", "body"),
-                    (Consumer<Adapter>)(Adapter adapter) -> when(adapter.put(anyString(), anyString())).thenReturn(new Response(200, "ok", Map.of("x-server", "server-1"))),
-                    (Consumer<Adapter>)(Adapter adapter) -> verify(adapter, times(1)).put("/", "body")),
-            Arguments.of(new RequestImpl(Method.DELETE, "/", ""),
-                    (Consumer<Adapter>)(Adapter adapter) -> when(adapter.delete(anyString())).thenReturn(new Response(200, "ok", Map.of("x-server", "server-1"))),
-                    (Consumer<Adapter>)(Adapter adapter) -> verify(adapter, times(1)).delete("/")),
-            Arguments.of(new RequestImpl(Method.HEAD, "/", ""),
-                    (Consumer<Adapter>)(Adapter adapter) -> when(adapter.head(anyString())).thenReturn(new Response(200, "ok", Map.of("x-server", "server-1"))),
-                    (Consumer<Adapter>)(Adapter adapter) -> verify(adapter, times(1)).head("/"))
-        );
+    @Test
+    void shouldTakeProblematicInstanceOffline() {
+        Adapter adapter1 = mock(Adapter.class);
+        Adapter adapter2 = mock(Adapter.class);
+        when(adapter2.get(anyString())).thenAnswer((Answer<Response>) invocation -> {
+            Thread.sleep(200);
+            return new Response(200, "ok", Map.of("x-server", "server-2"));
+        });
+        RoutingService routingService = new RoundRobinRoutingServiceImpl(List.of(adapter1, adapter2), 5000);
+        doThrow(new RuntimeException("some error")).when(adapter1).get(anyString());
+        IntStream.range(0, 2)
+                .forEach(index -> routingService
+                        .forwardRequest(new RequestImpl(Method.GET, "/", "req " + index)));
+        verify(adapter1, times(1)).get(anyString());
+        verify(adapter2, times(2)).get(anyString());
+        reset(adapter1);
+
+        when(adapter1.get(anyString())).thenAnswer((Answer<Response>) invocation -> {
+            Thread.sleep(200);
+            return new Response(200, "ok", Map.of("x-server", "server-1"));
+        });
+        when(adapter1.healthcheck()).thenAnswer((Answer<Boolean>) invocation -> true);
+
+        try {
+            Thread.sleep(2000);
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
+        var response = routingService
+                .forwardRequest(new RequestImpl(Method.GET, "/", "req 3"));
+        assertEquals("server-1", response.headers().get("x-server"));
+        routingService.stop();
     }
 }

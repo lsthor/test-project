@@ -12,4 +12,6 @@ public interface Adapter {
     Response put(String path, String body);
 
     Response head(String path);
+
+    boolean healthcheck();
 }
